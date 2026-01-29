@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burhan Stationery Stock Details</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #2980b9;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --alert-color: #e74c3c;
+            --success-color: #27ae60;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: transparent;
+        }
+
+        /* Header Styles */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-bottom: 5px solid var(--accent-color);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .header h2 {
+            font-size: 1.2rem;
+            margin: 5px 0;
+            color: var(--accent-color);
+        }
+
+        .header h3 {
+            font-size: 1rem;
+            margin: 0;
+            color: #7f8c8d;
+            font-weight: 400;
+        }
+
+        .date-time {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            background: #ecf0f1;
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        /* Search Box Styles */
+        .search-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
+            outline: none;
+        }
+
+        button.search-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        button.search-btn:hover {
+            background-color: #1abc9c;
+        }
+
+        /* Result Card Styles - This part will be printed */
+        .result-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: none; /* Hidden initially */
+            animation: fadeIn 0.5s ease-in-out;
+            border: 1px solid #eee;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .item-header {
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-code-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .detail-row {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid #f9f9f9;
+            padding-bottom: 5px;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* Status Styling */
+        .status-badge {
+            padding: 8px;
+            border-radius: 5px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .status-ok { background-color: var(--success-color); }
+        .status-low { background-color: var(--alert-color); animation: pulse 2s infinite; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        /* Action Buttons */
+        .actions {
+            margin-top: 20px;
+            display: none; /* Hidden initially */
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .pdf-btn { background-color: #e74c3c; color: white; }
+        .new-btn { background-color: #34495e; color: white; }
+
+        .error-msg {
+            color: white;
+            background-color: #e74c3c;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            display: none;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            .detail-grid { grid-template-columns: 1fr; }
+            .header h1 { font-size: 1.2rem; }
+            .actions { flex-direction: column; }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="header">
+        <h1>BUKHARIYA EDUCATIONAL CENTRE</h1>
+        <h2>Burhan Stationery</h2>
+        <h3>Stock Details</h3>
+        <div class="date-time" id="dateTime"></div>
+    </div>
+
+    <div class="search-box" id="searchSection">
+        <input type="text" id="searchInput" placeholder="Enter Item Code (e.g., F1)..." onkeypress="handleEnter(event)">
+        <button class="search-btn" onclick="searchItem()">Search</button>
+    </div>
+    
+    <div id="loading" class="loading">Searching Database...</div>
+    <div id="errorMsg" class="error-msg">Item Code not found! Please check and try again.</div>
+
+    <div id="printableArea">
+        <div class="result-card" id="resultCard">
+            <div class="header" style="box-shadow:none; border:none; padding:0; margin-bottom:10px; display:none;" id="printHeader">
+                 <h2 style="color:#2c3e50; font-size:18px;">BUKHARIYA EDUCATIONAL CENTRE</h2>
+                 <h3 style="font-size:14px;">Burhan Stationery Stock Report</h3>
+                 <hr>
+            </div>
+
+            <div class="item-header">
+                <div>
+                    <div class="label">Item Name</div>
+                    <div class="value" style="font-size: 1.3rem;" id="dispName"></div>
+                </div>
+                <div class="item-code-badge" id="dispCode"></div>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-row"><span class="label">Category</span><span class="value" id="dispCat"></span></div>
+                <div class="detail-row"><span class="label">Unit</span><span class="value" id="dispUnit"></span></div>
+                
+                <div class="detail-row"><span class="label">Purchase Price</span><span class="value" id="dispPPrice"></span></div>
+                <div class="detail-row"><span class="label">Selling Price</span><span class="value" id="dispSPrice"></span></div>
+
+                <div class="detail-row"><span class="label">Opening Stock</span><span class="value" id="dispOpen"></span></div>
+                <div class="detail-row"><span class="label">Total In</span><span class="value" id="dispIn"></span></div>
+                
+                <div class="detail-row"><span class="label">Total Out</span><span class="value" id="dispOut"></span></div>
+                <div class="detail-row"><span class="label">Reorder Level</span><span class="value" id="dispReorder"></span></div>
+            </div>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px dashed #ccc;">
+
+            <div class="detail-grid">
+                <div class="detail-row">
+                    <span class="label">Current Stock</span>
+                    <span class="value" style="font-size: 1.2rem;" id="dispCurrent"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Total Stock Value</span>
+                    <span class="value" style="font-size: 1.2rem;" id="dispValue"></span>
+                </div>
+            </div>
+
+            <div id="statusBox" class="status-badge"></div>
+            
+            <div style="margin-top: 20px; text-align: right; font-size: 10px; color: #aaa; display:none;" id="printFooter">
+                Generated via Burhan Stock System
+            </div>
+        </div>
+    </div>
+
+    <div class="actions" id="actionButtons">
+        <button class="action-btn pdf-btn" onclick="downloadPDF()">
+            Download PDF (A4)
+        </button>
+        <button class="action-btn new-btn" onclick="resetSearch()">
+            New Search
+        </button>
+    </div>
+
+</div>
+
+<script>
+    // 1. DATA SOURCE
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQl5P3dFIBWNxylgPEM_GK9NDIGsvCjAnBGd7XQt2GFsiUjxN365ID31IdDXNhFsxguRx07B-WTcLEW/pub?gid=0&single=true&output=tsv';
+
+    // 2. DATE & TIME
+    function updateTime() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        document.getElementById('dateTime').innerText = now.toLocaleDateString('en-US', options);
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    // 3. ENTER KEY SUPPORT
+    function handleEnter(event) {
+        if (event.key === "Enter") {
+            searchItem();
+        }
+    }
+
+    // 4. SEARCH FUNCTION
+    function searchItem() {
+        const inputCode = document.getElementById('searchInput').value.trim().toUpperCase();
+        if (!inputCode) return;
+
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('errorMsg').style.display = 'none';
+        document.getElementById('resultCard').style.display = 'none';
+        document.getElementById('actionButtons').style.display = 'none';
+
+        fetch(SHEET_URL)
+            .then(response => response.text())
+            .then(data => {
+                const rows = data.split('\n');
+                let found = false;
+
+                // Loop through rows (skip header row 0)
+                for (let i = 1; i < rows.length; i++) {
+                    const cells = rows[i].split('\t');
+                    // Check if row has data and matches code (Column 0 is Item Code)
+                    if (cells.length > 0) {
+                        const cellCode = cells[0].replace(/"/g, '').trim().toUpperCase(); // Clean data
+                        
+                        if (cellCode === inputCode) {
+                            displayData(cells);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                if (!found) {
+                    document.getElementById('errorMsg').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('loading').style.display = 'none';
+                alert("Network Error! Please check internet.");
+            });
+    }
+
+    // 5. DISPLAY DATA
+    function displayData(cells) {
+        // Map columns based on your sheet order:
+        // 0:Code, 1:Name, 2:Category, 3:Unit, 4:OpenStock, 5:In, 6:Out, 
+        // 7:Current, 8:P.Price, 9:S.Price, 10:TotalVal, 11:Reorder, 12:Status
+
+        document.getElementById('dispCode').innerText = cells[0];
+        document.getElementById('dispName').innerText = cells[1];
+        document.getElementById('dispCat').innerText = cells[2];
+        document.getElementById('dispUnit').innerText = cells[3];
+        document.getElementById('dispOpen').innerText = cells[4];
+        document.getElementById('dispIn').innerText = cells[5];
+        document.getElementById('dispOut').innerText = cells[6];
+        document.getElementById('dispCurrent').innerText = cells[7];
+        document.getElementById('dispPPrice').innerText = cells[8];
+        document.getElementById('dispSPrice').innerText = cells[9];
+        document.getElementById('dispValue').innerText = cells[10];
+        document.getElementById('dispReorder').innerText = cells[11];
+
+        // Status Logic
+        const statusText = cells[12] ? cells[12].trim() : "";
+        const statusBox = document.getElementById('statusBox');
+        
+        statusBox.innerText = statusText;
+        
+        // Remove old classes
+        statusBox.classList.remove('status-ok', 'status-low');
+
+        // Check for Low Stock keywords
+        const lowerStatus = statusText.toLowerCase();
+        if (lowerStatus.includes('low') || lowerStatus.includes('reorder') || lowerStatus.includes('out')) {
+            statusBox.classList.add('status-low');
+        } else {
+            statusBox.classList.add('status-ok');
+        }
+
+        // Show UI
+        document.getElementById('searchSection').style.display = 'none'; // Hide search
+        document.getElementById('resultCard').style.display = 'block'; // Show card
+        document.getElementById('actionButtons').style.display = 'flex'; // Show buttons
+    }
+
+    // 6. RESET
+    function resetSearch() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchSection').style.display = 'flex';
+        document.getElementById('resultCard').style.display = 'none';
+        document.getElementById('actionButtons').style.display = 'none';
+        document.getElementById('errorMsg').style.display = 'none';
+        document.getElementById('searchInput').focus();
+    }
+
+    // 7. PDF DOWNLOAD (Single Page A4 Fix)
+    function downloadPDF() {
+        const element = document.getElementById('resultCard');
+        
+        // Temporarily show print headers for PDF
+        document.getElementById('printHeader').style.display = 'block';
+        document.getElementById('printFooter').style.display = 'block';
+
+        const opt = {
+            margin:       10,
+            filename:     'Stock_Details_' + document.getElementById('dispCode').innerText + '.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Generate PDF
+        html2pdf().set(opt).from(element).save().then(() => {
+            // Hide headers again after download
+            document.getElementById('printHeader').style.display = 'none';
+            document.getElementById('printFooter').style.display = 'none';
+        });
+    }
+</script>
+
+</body>
+</html>
